@@ -376,7 +376,8 @@ class module:
                 logger.info('發生未知異常, 請確認原因')
                 return {'success':False, 'message':'發生未知異常, 請確認原因', 'data':[]}
     # 爬取賣家數據中心 > 賣家表現
-    def product_performance(self):
+    def Product_Performance(self, store):
+        error_count = 0
         while True:
             try:
                 # 判斷回到主頁
@@ -421,23 +422,29 @@ class module:
                 y_end = int(datetime.datetime.strptime(yesterday + ' ' + '23:59', '%Y/%m/%d %H:%M').timestamp())
                 SPC_CDS = [cookies['value'] for cookies in self.driver.get_cookies() if cookies['name'] == 'SPC_CDS']
                 if not SPC_CDS:
-                    return {}
+                    return {'success':False, 'message':'打蝦皮API捕捉EXCEL任務時, COOKIES:SPC_CDS is None, 請確認', 'data':[]}
                 url = f'https://seller.shopee.tw/api/mydata/v2/product/performance/export/?start_ts={y_start}&end_ts={y_end}&period=yesterday&sort_by=&SPC_CDS={SPC_CDS}&SPC_CDS_VER=2'
                 session = requests.Session()
                 for cookie in self.driver.get_cookies():
                     session.cookies[cookie['name']] = cookie['value']
                 resp = session.get(url=url)
                 if resp.status_code != 200:
-                    return {}
+                    return {'success':False, 'message':'打蝦皮API捕捉EXCEL失敗, 請確認', 'data':[]}
                 excel_name = resp.json()['data']['report_file_name']
                 # 取出檔案資料
                 excel_path = [Path('.', str(i)) for i in path.iterdir() if excel_name in str(i)]
                 excel_path = excel_path[0] if excel_path else None
                 if not excel_path:
-                    return {}
+                    return {'success':False, 'message':f'下載EXCEL後, 查無EXCEL檔案, 資料夾內容:{path.iterdir()}, 需取出資料名稱為:{excel_name}', 'data':[]}
                 df = pd.read_excel(str(excel_path.absolute()))
                 recode = df.to_dict('record')
                 data_group = [list(j) for i,j in groupby(sorted(recode, key=lambda x:x['商品ID']), key=lambda x:x['商品ID'])]
+                # result的檔案時間
+                up_dt = datetime.datetime.now()
+                log_dt = datetime.datetime.now().replace(minute=0, second=0,microsecond=0)
+                UpdateDate = up_dt.strftime('%Y-%m-%d %H:%M:%S')
+                LogDate = log_dt.strftime('%Y-%m-%d %H:%M:%S')
+                # 開始資料捕捉
                 result = []
                 for datas in data_group:
                     main_information = {}
@@ -458,6 +465,8 @@ class module:
                         else:
                             secondary_information.append(data)
                     for data in secondary_information:
+                        products['shopid'] = store
+                        products['TargetDate'] = yesterday
                         products['product_name'] = data['商品名稱']
                         products['platformproduct_phopeeid'] = str(data['商品ID'])
                         products['product_specification'] = data['商品規格']
@@ -483,11 +492,25 @@ class module:
                         products['paid_num'] = int(data['付款件數'])
                         products['payment_amount'] = int(data['付款金額 (TWD)'].replace(',',''))
                         products['uv_to_paid_order_rate'] = float(main_information['uv_to_paid_order_rate'].replace('%',''))
+                        products['UpdateDate'] = UpdateDate
+                        products['LogDate'] = LogDate
                         result.append(products)
                 # 刪除檔案
                 excel_path.unlink()
                 # 回傳資訊
                 return {'success':True, 'message':'', 'data':result}
+            except (TimeoutException, ElementNotInteractableException, ElementClickInterceptedException,):
+                error_count += 1
+                # 判斷是否有跳出訊息
+                result_window = self.popup_window()
+                if (result_window['success'] and result_window['message']) or result_window['success'] is False:
+                    logger.info(result_window['message'])
+                if result_window['success'] and not result_window['message']:
+                    logger.info('\n' + traceback.format_exc())
+                logger.info(f'進行重試:{error_count}')
+                time.sleep(1)
+                self.driver.get('https://seller.shopee.tw/')
+                continue
             except NoSuchElementException:
                 logger.info('\n' + traceback.format_exc())
                 logger.info('發生NoSuch可能改版, 請確認原因')

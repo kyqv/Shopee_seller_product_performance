@@ -38,10 +38,10 @@ class mission:
             switch_result = shopee.switch_store(store=data['name'])
             if not switch_result['success']:
                 return switch_result
-            center_result = shopee.Seller_Data_Center(store=data['id'])
+            center_result = shopee.Product_Performance(store=data['id'])
             if not switch_result['success']:
                 return center_result
-            result.append(center_result['data'])
+            result += center_result['data']
             logger.info(f'賣場:{data["name"]}, 數據獲取成功')
             if index != last_data:
                 time.sleep(60)
