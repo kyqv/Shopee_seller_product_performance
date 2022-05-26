@@ -23,9 +23,12 @@ logger = logging.getLogger('robot')
 
 #創建下載地址
 
-path = Path('lib/download')
-if not path.touch():
-    path.exists()
+path = Path('lib/download/')
+if path.exists():
+    for i in path.iterdir():
+        i.unlink()
+else:
+    path.mkdir()
 
 class module:
     def __init__(self, user, pwd, headless=False):
@@ -388,6 +391,7 @@ class module:
                 # 切換到商品
                 self.driver.find_element_by_css_selector('a.nav-tab.datacenter-products').click()
                 # 點擊商品表現
+                WebDriverWait(self.driver, 10, 2).until(EC.presence_of_element_located((By.CLASS_NAME,'side-navbar-item')))
                 html = requests_html.HTML(html=self.driver.page_source)
                 performance_count = None
                 for i,soup in enumerate(html.find('li.side-navbar-item')):
@@ -402,44 +406,39 @@ class module:
                 # 點擊昨日
                 count = 0
                 html = requests_html.HTML(html=self.driver.page_source)
-                for i, key in enumerate(html.find('li.shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option', first=True).text.split('\n')):
-                    if '昨日' in key:
+                for i, key in enumerate(html.find('li.shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option')):
+                    if '昨日' in key.text:
                         count = i+1
                         break
-                WebDriverWait(self.driver, 10, 0.5).until(EC.presence_of_element_located((By.CLASS_NAME,f'shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option:nth-child({count})')))
+                WebDriverWait(self.driver, 10, 0.5).until(EC.presence_of_element_located((By.CLASS_NAME,f'shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option')))
                 self.driver.find_element_by_css_selector(f'li.shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option:nth-child({count})').click()
                 # 點擊商品表現 > 匯出報表
                 WebDriverWait(self.driver, 10, 0.5).until(EC.presence_of_element_located((By.CLASS_NAME,'export.shopee-button.shopee-button--normal')))
                 element = self.driver.find_element(by=By.CSS_SELECTOR, value='button.export.shopee-button.shopee-button--normal')
                 ActionChains(self.driver).click(element).perform()
                 # 點擊商品表現 > 匯出報表 > 下載
-                WebDriverWait(self.driver, 10, 0.5).until(EC.presence_of_element_located((By.CLASS_NAME,'shopee-button.shopee-button--primary.shopee-button--normal')))
+                WebDriverWait(self.driver, 10, 0.5).until(EC.presence_of_element_located((By.CSS_SELECTOR,'tr.shopee-table__row.valign-top > td.is-last > div > div > button.shopee-button.shopee-button--primary.shopee-button--normal:nth-child(1) > span')))
+                time.sleep(10)
                 element = self.driver.find_element(by=By.CSS_SELECTOR, value='tr.shopee-table__row.valign-top > td.is-last > div > div > button.shopee-button.shopee-button--primary.shopee-button--normal')
                 ActionChains(self.driver).click(element).perform()
-                # 取出EXCEL名稱
-                yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y/%m/%d')
-                y_start = int(datetime.datetime.strptime(yesterday + ' ' + '00:00', '%Y/%m/%d %H:%M').timestamp())
-                y_end = int(datetime.datetime.strptime(yesterday + ' ' + '23:59', '%Y/%m/%d %H:%M').timestamp())
-                SPC_CDS = [cookies['value'] for cookies in self.driver.get_cookies() if cookies['name'] == 'SPC_CDS']
-                if not SPC_CDS:
-                    return {'success':False, 'message':'打蝦皮API捕捉EXCEL任務時, COOKIES:SPC_CDS is None, 請確認', 'data':[]}
-                url = f'https://seller.shopee.tw/api/mydata/v2/product/performance/export/?start_ts={y_start}&end_ts={y_end}&period=yesterday&sort_by=&SPC_CDS={SPC_CDS}&SPC_CDS_VER=2'
-                session = requests.Session()
-                for cookie in self.driver.get_cookies():
-                    session.cookies[cookie['name']] = cookie['value']
-                resp = session.get(url=url)
-                if resp.status_code != 200:
-                    return {'success':False, 'message':'打蝦皮API捕捉EXCEL失敗, 請確認', 'data':[]}
-                excel_name = resp.json()['data']['report_file_name']
                 # 取出檔案資料
-                excel_path = [Path('.', str(i)) for i in path.iterdir() if excel_name in str(i)]
-                excel_path = excel_path[0] if excel_path else None
-                if not excel_path:
-                    return {'success':False, 'message':f'下載EXCEL後, 查無EXCEL檔案, 資料夾內容:{path.iterdir()}, 需取出資料名稱為:{excel_name}', 'data':[]}
+                excel_count = 0
+                while True:
+                    excel_path = [Path('.', str(i)) for i in path.iterdir() if 'export' in str(i)]
+                    excel_path = excel_path[0] if excel_path else None
+                    if excel_path:
+                        logger.info('EXCEL檔案捕捉完成')
+                        break
+                    else:
+                        logger.info('EXCEL下載未完成, 2秒後重試捕捉')
+                        time.sleep(2)
+                        continue
+                        #return {'success':False, 'message':f'下載EXCEL後, 查無EXCEL檔案, 資料夾內容:{path.iterdir()}', 'data':[]}
                 df = pd.read_excel(str(excel_path.absolute()))
                 recode = df.to_dict('record')
                 data_group = [list(j) for i,j in groupby(sorted(recode, key=lambda x:x['商品ID']), key=lambda x:x['商品ID'])]
                 # result的檔案時間
+                yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y/%m/%d')
                 up_dt = datetime.datetime.now()
                 log_dt = datetime.datetime.now().replace(minute=0, second=0,microsecond=0)
                 UpdateDate = up_dt.strftime('%Y-%m-%d %H:%M:%S')
@@ -481,16 +480,16 @@ class module:
                         products['atc_rate'] = float(main_information['atc_rate'].replace('%', ''))
                         products['shop_buyers_allorders'] = int(data['不重複買家數(全部訂單)'])
                         products['confirmed_orders_num'] = int(data['下單商品件數'])
-                        products['confirmed_gmv'] = int(data['下單金額 (TWD)'].replace(',', ''))
+                        products['confirmed_gmv'] = data['下單金額 (TWD)'] if type(data['下單金額 (TWD)']) == int else int(data['下單金額 (TWD)'].replace(',', ''))
                         products['shop_uv_allorders_rate'] = float(main_information['shop_uv_allorders_rate'].replace('%', ''))
                         products['shop_buyers_shippableorder'] = int(data['不重複買家數(可出貨訂單)'])
                         products['placed_unit_num'] = int(data['訂單商品件數(可出貨訂單)'])
-                        products['confirmed_gmv_shippableorder'] = int(data['銷售額(可出貨訂單) (TWD)'].replace(',',''))
+                        products['confirmed_gmv_shippableorder'] = data['銷售額(可出貨訂單) (TWD)'] if type(data['銷售額(可出貨訂單) (TWD)']) == int else int(data['銷售額(可出貨訂單) (TWD)'].replace(',',''))
                         products['uv_to_confirmed_buyers_rate'] = float(main_information['uv_to_confirmed_buyers_rate'].replace('%', ''))
                         products['allorders_to_shippableorder_rate'] = float(data['全部訂單到可出貨訂單轉換率'].replace('%',''))
                         products['shop_buyers_paid_order'] = int(data['不重複買家(付款訂單)'])
                         products['paid_num'] = int(data['付款件數'])
-                        products['payment_amount'] = int(data['付款金額 (TWD)'].replace(',',''))
+                        products['payment_amount'] = data['付款金額 (TWD)'] if type(data['付款金額 (TWD)']) == int else int(data['付款金額 (TWD)'].replace(',',''))
                         products['uv_to_paid_order_rate'] = float(main_information['uv_to_paid_order_rate'].replace('%',''))
                         products['UpdateDate'] = UpdateDate
                         products['LogDate'] = LogDate
@@ -498,9 +497,12 @@ class module:
                 # 刪除檔案
                 excel_path.unlink()
                 # 回傳資訊
+                self.driver.get('https://seller.shopee.tw/')
                 return {'success':True, 'message':'', 'data':result}
             except (TimeoutException, ElementNotInteractableException, ElementClickInterceptedException,):
                 error_count += 1
+                if error_count > 5:
+                    return {'success':False, 'message':'重試超過5次, 請人工確認', 'data':[]}
                 # 判斷是否有跳出訊息
                 result_window = self.popup_window()
                 if (result_window['success'] and result_window['message']) or result_window['success'] is False:

@@ -37,9 +37,15 @@ class mission:
             logger.info(f"共{len(store_list_result['data'])}個賣場, 目前第{index+1}個賣場")
             switch_result = shopee.switch_store(store=data['name'])
             if not switch_result['success']:
+                # 取得cookies
+                cookies = shopee.get_cookies()
+                switch_result['cookies'] = cookies
                 return switch_result
             center_result = shopee.Product_Performance(store=data['id'])
-            if not switch_result['success']:
+            if not center_result['success']:
+                # 取得cookies
+                cookies = shopee.get_cookies()
+                center_result['cookies'] = cookies
                 return center_result
             result += center_result['data']
             logger.info(f'賣場:{data["name"]}, 數據獲取成功')
