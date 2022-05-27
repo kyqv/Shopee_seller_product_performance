@@ -404,21 +404,22 @@ class module:
                 element = self.driver.find_element_by_css_selector('div.bi-date-input.track-click-open-time-selector')
                 ActionChains(self.driver).click(element).perform()
                 # 點擊昨日
+                WebDriverWait(self.driver, 10, 0.5).until(EC.presence_of_element_located((By.CLASS_NAME,f'shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option')))
                 count = 0
                 html = requests_html.HTML(html=self.driver.page_source)
                 for i, key in enumerate(html.find('li.shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option')):
                     if '昨日' in key.text:
                         count = i+1
                         break
-                WebDriverWait(self.driver, 10, 0.5).until(EC.presence_of_element_located((By.CLASS_NAME,f'shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option')))
                 self.driver.find_element_by_css_selector(f'li.shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option:nth-child({count})').click()
                 # 點擊商品表現 > 匯出報表
                 WebDriverWait(self.driver, 10, 0.5).until(EC.presence_of_element_located((By.CLASS_NAME,'export.shopee-button.shopee-button--normal')))
                 element = self.driver.find_element(by=By.CSS_SELECTOR, value='button.export.shopee-button.shopee-button--normal')
                 ActionChains(self.driver).click(element).perform()
+                time.sleep(1)
                 # 點擊商品表現 > 匯出報表 > 下載
-                WebDriverWait(self.driver, 10, 0.5).until(EC.presence_of_element_located((By.CSS_SELECTOR,'tr.shopee-table__row.valign-top > td.is-last > div > div > button.shopee-button.shopee-button--primary.shopee-button--normal:nth-child(1) > span')))
-                time.sleep(10)
+                WebDriverWait(self.driver, 30, 0.5).until(EC.presence_of_element_located((By.CSS_SELECTOR,'tr.shopee-table__row.valign-top:nth-child(1) > td.is-last > div > div > button.shopee-button.shopee-button--primary.shopee-button--normal > span')))
+                #time.sleep(10)
                 element = self.driver.find_element(by=By.CSS_SELECTOR, value='tr.shopee-table__row.valign-top > td.is-last > div > div > button.shopee-button.shopee-button--primary.shopee-button--normal')
                 ActionChains(self.driver).click(element).perform()
                 # 取出檔案資料

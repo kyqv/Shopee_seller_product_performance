@@ -26,7 +26,7 @@ def main():
         config.line(message=f"發生錯誤!!!!{result['message']}")
 
     logger.info(f"一共獲取{len(result['data'])}個賣場數據")
-    logger.info(f"數據資訊:{result['data'][0]}")
+    logger.info(f"數據資訊:{result['data'][0] if result['data'] else result['data']}")
     # 回存cookies至config.yaml
     config_yaml['config']['cookies'] = result['cookies']
     config.save_setting(data=config_yaml)
