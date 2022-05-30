@@ -68,6 +68,7 @@ class Data(Base):
 
 def create_all(data_list):
     try:
+        logger.info('寫入db中..')
         session.add_all([Data(**data) for data in data_list])
         session.commit()
         logger.info('寫入db成功')

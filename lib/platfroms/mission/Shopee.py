@@ -1,4 +1,3 @@
-from re import L
 from ..module import Shopee
 from ...logs import log
 import logging
@@ -48,6 +47,7 @@ class mission:
                 center_result['cookies'] = cookies
                 return center_result
             result += center_result['data']
+            logger.info(f"賣場共:{len(center_result['data'])}筆商品資料")
             logger.info(f'賣場:{data["name"]}, 數據獲取成功')
             if index != last_data:
                 time.sleep(60)
