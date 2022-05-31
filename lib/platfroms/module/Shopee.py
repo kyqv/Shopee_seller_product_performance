@@ -410,9 +410,9 @@ class module:
                     if '昨日' in key.text:
                         count = i+1
                         break
-                #self.driver.find_element_by_css_selector(f'li.shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option:nth-child({count})').click()
-                element = self.driver.find_element(by=By.CSS_SELECTOR, value=f'li.shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option:nth-child({count})')
-                ActionChains(self.driver).click(element).perform()
+                self.driver.find_element_by_css_selector(f'li.shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option:nth-child({count})').click()
+                #element = self.driver.find_element(by=By.CSS_SELECTOR, value=f'li.shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option:nth-child({count})')
+                #ActionChains(self.driver).click(element).perform()
                 # 點擊商品表現 > 匯出報表
                 WebDriverWait(self.driver, 10, 0.5).until(EC.presence_of_element_located((By.CLASS_NAME,'export.shopee-button.shopee-button--normal')))
                 element = self.driver.find_element(by=By.CSS_SELECTOR, value='button.export.shopee-button.shopee-button--normal')
