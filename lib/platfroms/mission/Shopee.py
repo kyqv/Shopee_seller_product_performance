@@ -27,6 +27,9 @@ class mission:
         # 捕捉賣場列表
         store_list_result = shopee.crawl_store_list()
         if not store_list_result['success']:
+            # 取得cookies
+            cookies = shopee.get_cookies()
+            store_list_result['cookies'] = cookies
             return store_list_result
         
         # 捕捉數據
