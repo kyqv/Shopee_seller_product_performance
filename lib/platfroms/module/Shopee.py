@@ -412,7 +412,7 @@ class module:
                         break
                 WebDriverWait(self.driver, 10, 0.5).until(EC.presence_of_element_located((By.CSS_SELECTOR, f'li.shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option:nth-child({count})')))
                 #self.driver.find_element_by_css_selector(f'li.shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option:nth-child({count})').click()
-                element = self.driver.find_element(by=By.CSS_SELECTOR, value=f'li.shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option:nth-child({count})')
+                element = self.driver.find_element(by=By.CSS_SELECTOR, value=f'li.shopee-date-shortcut-item.track-click-time-selector.edu-date-picker-option:nth-child({count}) > span.shopee-date-shortcut-item__text')
                 ActionChains(self.driver).click(element).perform()
                 # 點擊商品表現 > 匯出報表
                 WebDriverWait(self.driver, 10, 0.5).until(EC.presence_of_element_located((By.CLASS_NAME,'export.shopee-button.shopee-button--normal')))
