@@ -162,8 +162,8 @@ class module:
                     session.cookies[cookie['name']] = cookie['value']
                 resp = session.get(url)
                 if resp.status_code != 200:
-                    logger.info('發生錯誤請確認網路或可能蝦皮本身異常')
-                    return {'success':False, 'message':f'status_code_Error:{resp.status_code}', 'data':[]}
+                    logger.info(f'發生錯誤請確認網路或可能蝦皮本身異常, status_code:{resp.status_code}')
+                    raise TimeoutException
                 for shop in resp.json()['shops']:
                     store_list += [{'id':shop["shop_id"], 'name':shop["shop_name"].strip()}]
                 # 回首頁
