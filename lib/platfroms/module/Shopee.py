@@ -495,7 +495,7 @@ class module:
                         products['placed_unit_num'] = int(data['訂單商品件數(可出貨訂單)'])
                         products['confirmed_gmv_shippableorder'] = data['銷售額(可出貨訂單) (TWD)'] if type(data['銷售額(可出貨訂單) (TWD)']) == int else int(data['銷售額(可出貨訂單) (TWD)'].replace(',',''))
                         products['uv_to_confirmed_buyers_rate'] = float(main_information['uv_to_confirmed_buyers_rate'].replace('%', ''))
-                        products['allorders_to_shippableorder_rate'] = float(data['全部訂單到可出貨訂單轉換率'].replace('%',''))
+                        products['allorders_to_shippableorder_rate'] = float(data['全部訂單到可出貨訂單轉換率'].replace('%','').replace(',', ''))
                         products['shop_buyers_paid_order'] = int(data['不重複買家(付款訂單)'])
                         products['paid_num'] = int(data['付款件數'])
                         products['payment_amount'] = data['付款金額 (TWD)'] if type(data['付款金額 (TWD)']) == int else int(data['付款金額 (TWD)'].replace(',',''))
