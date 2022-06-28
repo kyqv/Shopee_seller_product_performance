@@ -43,6 +43,7 @@ class mission:
                 cookies = shopee.get_cookies()
                 switch_result['cookies'] = cookies
                 return switch_result
+            logger.info(f'賣場:{data["name"]}, 進行捕捉')
             center_result = shopee.Product_Performance(store=data['id'])
             if not center_result['success']:
                 # 取得cookies
