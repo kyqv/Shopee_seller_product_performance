@@ -499,7 +499,7 @@ class module:
                         products['shop_buyers_paid_order'] = int(data['不重複買家(付款訂單)'])
                         products['paid_num'] = int(data['付款件數'])
                         products['payment_amount'] = data['付款金額 (TWD)'] if type(data['付款金額 (TWD)']) == int else int(data['付款金額 (TWD)'].replace(',',''))
-                        products['uv_to_paid_order_rate'] = float(main_information['uv_to_paid_order_rate'].replace('%',''))
+                        products['uv_to_paid_order_rate'] = float(main_information['uv_to_paid_order_rate'].replace('%','').replace(',', ''))
                         products['UpdateDate'] = UpdateDate
                         products['LogDate'] = LogDate
                         result.append(products)
