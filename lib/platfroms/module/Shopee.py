@@ -47,7 +47,7 @@ class module:
                 #options.add_argument('blink-settings=imagesEnabled=false') #不加截圖片, 加速爬取
                 # if self.headless:
                 #     options.add_argument("--headless")
-                self.driver = webdriver.Chrome('chromedriver', chrome_options=options)
+                self.driver = webdriver.Chrome(Path().absolute().parent / 'chromedriver', chrome_options=options)
                 # 登入
                 self.driver.get('https://seller.shopee.tw/account/signin')
                 WebDriverWait(self.driver, 10, 3).until(EC.presence_of_element_located((By.CLASS_NAME,'signin')))
